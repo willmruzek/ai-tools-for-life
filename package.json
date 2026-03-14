@@ -5,7 +5,9 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "categorize": "node src/ynab/categorize.ts",
+    "recommend": "node src/ynab/recommend.ts",
+    "tsc": "tsc"
   },
   "engines": {
     "node": ">=24"
@@ -25,6 +27,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/node": "^25.3.3"
+    "@tsconfig/bases": "^1.0.23",
+    "@types/node": "^25.5.0"
   }
 }

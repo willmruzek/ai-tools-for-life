@@ -9,7 +9,7 @@ import { generateText, Output } from 'ai';
 import { z } from 'zod';
 import { createOpenAI } from '@ai-sdk/openai';
 
-import { env } from './env.ts';
+import { env } from '../env.ts';
 
 const { OPENAI_API_KEY, ACCESS_TOKEN, PLAN_ID } = env;
 
@@ -26,7 +26,6 @@ const ACCOUNT_TYPES = new Set<ynab.AccountType>([
 
 const ynabAPI = new ynab.API(ACCESS_TOKEN);
 
-// Fetch accounts and categories in parallel
 const [accountsResponse, categoriesResponse] = await Promise.all([
   ynabAPI.accounts.getAccounts(PLAN_ID),
   ynabAPI.categories.getCategories(PLAN_ID),
@@ -41,7 +40,6 @@ for (const account of targetAccounts) {
   console.log(`  • ${account.name}`);
 }
 
-// Fetch unapproved transactions for all target accounts in parallel
 const txResponses = await Promise.all(
   targetAccounts.map((a) =>
     ynabAPI.transactions.getTransactionsByAccount(
@@ -64,7 +62,6 @@ console.log(
   `Found ${unapproved.length} unapproved transaction(s). Categorizing...`,
 );
 
-// Flatten all categories from all groups
 const allCategories = categoriesResponse.data.category_groups.flatMap((group) =>
   group.categories.map((cat) => ({
     id: cat.id,
@@ -73,9 +70,10 @@ const allCategories = categoriesResponse.data.category_groups.flatMap((group) =>
   })),
 );
 
-// Load and filter Amazon order history to 2025+
 const amazonHistoryPath = path.join(
   import.meta.dirname,
+  '..',
+  '..',
   'input',
   'AmazonOrderHistory.csv',
 );
@@ -154,7 +152,6 @@ const { output } = await generateText({
   }),
 });
 
-// Build lookup map for account info from transaction data
 const txById = new Map(unapproved.map((tx) => [tx.id, tx]));
 
 const succeeded = output.categorizations
@@ -176,10 +173,16 @@ const result = { succeeded, failed, recommendations: output.recommendations };
 console.log('AI categorizations:');
 console.log(JSON.stringify(result, null, 2));
 
-// Write output to file
-const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-const outputDir = path.join(import.meta.dirname, 'output');
+const outputDir = path.join(
+  import.meta.dirname,
+  '..',
+  '..',
+  'output',
+  'ynab',
+  'categorize',
+);
 await fs.mkdir(outputDir, { recursive: true });
+const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
 const outputPath = path.join(outputDir, `categorizations-${timestamp}.json`);
 await fs.writeFile(outputPath, JSON.stringify(result, null, 2));
 console.log(`\nOutput saved to: ${outputPath}`);
@@ -190,7 +193,6 @@ if (failed.unknownTxId.length > 0) {
   );
 }
 
-// Update all valid transactions in one PATCH call
 console.log('\nUpdating transactions in YNAB...');
 await ynabAPI.transactions.updateTransactions(PLAN_ID, {
   transactions: succeeded.map((cat) => ({
