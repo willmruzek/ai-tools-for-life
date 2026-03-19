@@ -33,7 +33,7 @@ async function createJob(): Promise<Response> {
 }
 
 // Triggered by Vercel cron or manually (GET with Authorization: Bearer CRON_SECRET)
-export async function GET(req: Request): Promise<Response> {
+export default async function handler(req: Request): Promise<Response> {
   const auth = requireBearerAuth(req);
 
   if (!auth.ok) return auth.response;

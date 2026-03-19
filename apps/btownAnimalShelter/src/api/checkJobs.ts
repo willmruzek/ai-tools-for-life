@@ -51,7 +51,7 @@ async function processPendingJobs(
   }
 }
 
-export async function GET(req: Request): Promise<Response> {
+export default async function handler(req: Request): Promise<Response> {
   const auth = requireBearerAuth(req);
   if (!auth.ok) return auth.response;
 
