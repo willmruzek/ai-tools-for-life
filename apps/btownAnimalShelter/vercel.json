@@ -8,10 +8,5 @@
       "path": "/api/checkJobs",
       "schedule": "*/30 * * * *"
     }
-  ],
-  "functions": {
-    "api/**/*.{ts,tsx}": {
-      "runtime": "nodejs24.x"
-    }
-  }
+  ]
 }
