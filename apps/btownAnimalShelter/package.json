@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.ts",
+    "trigger:createJob": "node scripts/triggerCreateJob.ts",
     "tsc": "tsc",
     "lint": "echo 'no lint configured'",
     "test": "echo 'no tests configured'"

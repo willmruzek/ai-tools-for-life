@@ -1,5 +1,6 @@
 import { get, put } from '@vercel/blob';
 import { z } from 'zod';
+import { env } from './env.ts';
 
 const JOB_BLOB_PATH = 'btownAnimalShelter/jobs.json';
 
@@ -24,7 +25,10 @@ const jobsFileSchema = z.object({
 });
 
 export async function getJobs(): Promise<Job[]> {
-  const result = await get(JOB_BLOB_PATH, { access: 'private' });
+  const result = await get(JOB_BLOB_PATH, {
+    access: 'private',
+    token: env.BLOB_READ_WRITE_TOKEN,
+  });
 
   if (result === null) return [];
 
@@ -40,6 +44,7 @@ export async function saveJobs(jobs: Job[]): Promise<void> {
     access: 'private',
     allowOverwrite: true,
     contentType: 'application/json',
+    token: env.BLOB_READ_WRITE_TOKEN,
   });
 }
 
