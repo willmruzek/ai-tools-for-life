@@ -5,6 +5,8 @@
   "scripts": {
     "build": "node scripts/build.ts",
     "trigger:createJob": "node scripts/triggerCreateJob.ts",
+    "trigger:checkJobs": "node scripts/triggerCheckJobs.ts",
+    "trigger:sendEmail": "node scripts/triggerSendEmail.ts",
     "tsc": "tsc",
     "lint": "echo 'no lint configured'",
     "test": "echo 'no tests configured'"
