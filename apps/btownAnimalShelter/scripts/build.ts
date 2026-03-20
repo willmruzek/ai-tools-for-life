@@ -94,14 +94,22 @@ async function main(): Promise<void> {
     await fs.copy(publicDir, path.join(OUTPUT_DIR, 'static'));
   }
 
-  // Required root config
-  await fs.writeJson(path.join(OUTPUT_DIR, 'config.json'), { version: 3 });
-
   // Bundle every .ts/.tsx file in src/api/
   const files = await fs.readdir(API_DIR);
   const handlerFiles = files.filter((f) => /\.(ts|tsx)$/.test(f));
 
   await Promise.all(handlerFiles.map(buildFunction));
+
+  // Generate routes mapping /api/<name> → function for each handler
+  const routes = handlerFiles.map((f) => {
+    const name = path.basename(f, path.extname(f));
+    return { src: `/api/${name}`, dest: `/api/${name}` };
+  });
+
+  await fs.writeJson(path.join(OUTPUT_DIR, 'config.json'), {
+    version: 3,
+    routes,
+  });
 
   console.log('Done!');
 }

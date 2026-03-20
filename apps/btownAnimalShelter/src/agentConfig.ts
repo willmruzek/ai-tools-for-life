@@ -8,23 +8,40 @@ const myDedent = dedent.withOptions({
 
 export const catSchema = z.object({
   initial_index_count: z.number(),
-  initial_index_count_citation: z.string(),
+  initial_index_count_citation: z
+    .string()
+    .describe('Source URL for initial_index_count')
+    .optional(),
   final_extraction_count: z.number(),
-  final_extraction_count_citation: z.string(),
+  final_extraction_count_citation: z
+    .string()
+    .describe('Source URL for final_extraction_count')
+    .optional(),
   cats: z.array(
     z.object({
       name: z.string(),
-      name_citation: z.string(),
+      name_citation: z.string().describe('Source URL for name').optional(),
       breed: z.string(),
-      breed_citation: z.string(),
+      breed_citation: z.string().describe('Source URL for breed').optional(),
+      profile_url: z.string(),
+      profile_url_citation: z
+        .string()
+        .describe('Source URL for profile_url')
+        .optional(),
       in_foster_home: z.boolean(),
-      in_foster_home_citation: z.string(),
+      in_foster_home_citation: z
+        .string()
+        .describe('Source URL for in_foster_home')
+        .optional(),
       age: z.string(),
-      age_citation: z.string(),
+      age_citation: z.string().describe('Source URL for age').optional(),
       img_srcs: z.array(
         z.object({
           value: z.string(),
-          value_citation: z.string(),
+          value_citation: z
+            .string()
+            .describe('Source URL for value')
+            .optional(),
         }),
       ),
     }),
@@ -45,12 +62,14 @@ export const agentPrompt = myDedent`
   Extraction Details:
   - Process the entire list on the page without truncation.
   - For each entry, including bonded pairs (which should remain as a single entry), navigate to their specific profile page to extract all full-size image URLs into 'img_srcs'.
+  - Capture the direct URL of each cat's profile page into 'profile_url'.
 
   Fields to extract:
   - initial_index_count: The total number of cats/entries found on the main index page before starting.
   - final_extraction_count: The total number of profile objects successfully created.
   - Name
   - Breed
+  - profile_url: The direct URL to the cat's individual profile page.
   - Foster status: set 'in_foster_home' to true if the profile indicates they are in a foster home.
   - Age normalization: use weeks for ≤16 weeks; months and weeks for >16 weeks but <12 months; years and months for ≥12 months.
 
