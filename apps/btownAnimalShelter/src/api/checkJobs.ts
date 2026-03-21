@@ -19,11 +19,18 @@ async function processPendingJobs(
       jobs.map(async (job) => {
         if (job.status !== 'pending') return job;
 
+        console.log(`[checkJobs] polling agent status for job ${job.id}`);
+        const t0 = Date.now();
         const status = await firecrawl.getAgentStatus(job.id);
+        console.log(
+          `[checkJobs] job ${job.id} status=${status.status} (${Date.now() - t0}ms)`,
+        );
 
         if (status.status === 'completed') {
           updated++;
-          await fetch(`${baseUrl}/api/sendEmail`, {
+          console.log(`[checkJobs] job ${job.id} completed, calling sendEmail`);
+          const t1 = Date.now();
+          const emailRes = await fetch(`${baseUrl}/api/sendEmail`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -31,10 +38,19 @@ async function processPendingJobs(
             },
             body: JSON.stringify({ jobId: job.id }),
           });
+          console.log(
+            `[checkJobs] sendEmail responded ${emailRes.status} in ${Date.now() - t1}ms`,
+          );
+          if (!emailRes.ok) {
+            const body = await emailRes.text();
+            console.error(`[checkJobs] sendEmail error body: ${body}`);
+          }
           return { ...job, status: 'readyToEmail' as const };
         } else if (status.status === 'failed') {
           failed++;
-          console.error(`Agent job ${job.id} failed: ${status.error}`);
+          console.error(
+            `[checkJobs] agent job ${job.id} failed: ${status.error}`,
+          );
           return { ...job, status: 'failed' as const };
         }
 
@@ -43,6 +59,7 @@ async function processPendingJobs(
     );
     return { ok: true, updatedJobs, updated, failed };
   } catch (err) {
+    console.error('[checkJobs] processPendingJobs threw:', err);
     return {
       ok: false,
       error: err instanceof Error ? err.message : String(err),
@@ -66,8 +83,13 @@ export default async function handler(
   const host = req.headers['host'] ?? 'localhost';
   const baseUrl = `${proto}://${host}`;
 
+  console.log('[checkJobs] fetching jobs from db');
+  const t0 = Date.now();
   const jobs = await db.getJobs();
   const pendingJobs = jobs.filter((j) => j.status === 'pending');
+  console.log(
+    `[checkJobs] found ${jobs.length} total jobs, ${pendingJobs.length} pending (${Date.now() - t0}ms)`,
+  );
 
   if (pendingJobs.length === 0) {
     res.status(200).json({ processed: 0 });
@@ -76,9 +98,13 @@ export default async function handler(
 
   const result = await processPendingJobs(jobs, baseUrl);
   if (!result.ok) {
+    console.error('[checkJobs] processing failed:', result.error);
     res.status(500).json({ error: result.error });
     return;
   }
+  console.log(
+    `[checkJobs] saving jobs, updated=${result.updated} failed=${result.failed}`,
+  );
   await db.saveJobs(result.updatedJobs);
 
   res.status(200).json({

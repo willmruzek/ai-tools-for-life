@@ -54,18 +54,20 @@ export type Cat = CatData['cats'][number];
 export const agentPrompt = myDedent`
   Extract all cat profiles from https://bloomington.in.gov/animal-shelter.
 
+  IMPORTANT: Exclude any cats categorized as 'Working Cats'.
+
   Validation Step:
-  1. Before extracting individual profiles, identify and record the total number of cats listed on the index page.
+  1. Before extracting individual profiles, identify and record the total number of non-working cats listed on the index page (expecting 50+ results).
   2. After extraction, compare the number of results collected to that initial count.
   3. If there is a discrepancy (accounting for bonded pairs as single entries), re-scan the page to ensure no entries were missed or truncated.
 
   Extraction Details:
-  - Process the entire list on the page without truncation.
+  - Process the entire list on the single page without truncation.
   - For each entry, including bonded pairs (which should remain as a single entry), navigate to their specific profile page to extract all full-size image URLs into 'img_srcs'.
   - Capture the direct URL of each cat's profile page into 'profile_url'.
 
   Fields to extract:
-  - initial_index_count: The total number of cats/entries found on the main index page before starting.
+  - initial_index_count: The total number of eligible cats/entries found on the main index page before starting.
   - final_extraction_count: The total number of profile objects successfully created.
   - Name
   - Breed
